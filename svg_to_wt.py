@@ -4,6 +4,7 @@ from svg.path import parse_path
 from svg.path.path import Line, Move, CubicBezier, QuadraticBezier
 import tkinter as tk
 from tkinter import filedialog, messagebox
+import webbrowser
 
 DEFAULT_LINE_THICKNESS = 0.002
 
@@ -102,7 +103,7 @@ def launch_gui():
             file_entry.delete(0, tk.END)
             file_entry.insert(0, path)
 
-    def run_conversion():
+    def get_inputs():
         svg_path = file_entry.get()
         try:
             scale = float(scale_entry.get())
@@ -110,46 +111,88 @@ def launch_gui():
             y_off = float(y_offset_entry.get())
             thickness_mult = float(thickness_entry.get())
         except ValueError:
-            messagebox.showerror("Input Error", "Please enter valid numerber you retard")
-            return
+            messagebox.showerror("Input Error", "Please enter valid number you retard")
+            return None
         if not svg_path:
-            messagebox.showerror("Missing File", "You stupid ? pick a fucking file")
+            messagebox.showerror("Missing File", "Pick a file idiot")
+            return None
+        return svg_path, scale, x_off, y_off, thickness_mult
+
+    def run_conversion_to_file():
+        inputs = get_inputs()
+        if not inputs:
             return
+        svg_path, scale, x_off, y_off, thickness_mult = inputs
+
+        output_path = filedialog.asksaveasfilename(defaultextension=".txt", filetypes=[("Text Files", "*.txt")])
+        if not output_path:
+            status_label.config(text="⚠️ Save cancelled.", fg="orange")
+            return
+
         try:
-            output = convert_svg_to_wt(svg_path, "output.txt", scale, x_off, y_off, thickness_mult)
-            messagebox.showinfo("Success", f"Saved to: {output}")
+            convert_svg_to_wt(svg_path, output_path, scale, x_off, y_off, thickness_mult)
+            status_label.config(text=f"✅ Success! Saved to: {output_path}", fg="green")
         except Exception as e:
-            messagebox.showerror("Error", str(e))
+            status_label.config(text=f"❌ Error: {str(e)}", fg="red")
+
+    def run_conversion_to_clipboard():
+        inputs = get_inputs()
+        if not inputs:
+            return
+        svg_path, scale, x_off, y_off, thickness_mult = inputs
+        try:
+            quads = parse_svg_filled(svg_path, scale, x_off, y_off, thickness_mult)
+            full_text = "drawQuads {\n" + "\n".join(quads) + "\n}"
+            root.clipboard_clear()
+            root.clipboard_append(full_text)
+            status_label.config(text="📋 Copied to clipboard!", fg="green")
+        except Exception as e:
+            status_label.config(text=f"❌ Error: {str(e)}", fg="red")
+
+    def open_github():
+        webbrowser.open("https://github.com/ManiacPog/SVG-to-sight-art")
 
     root = tk.Tk()
-    root.title("SVG to Sight art by Mat")
+    root.title("🦊 SVG to Sight 🦊")
+    root.resizable(False, False)
 
-    tk.Label(root, text="SVG File:").grid(row=0, column=0, sticky="e")
+    padding = {'padx': 8, 'pady': 4}
+
+    tk.Label(root, text="SVG File:").grid(row=0, column=0, sticky="e", **padding)
     file_entry = tk.Entry(root, width=40)
-    file_entry.grid(row=0, column=1)
-    tk.Button(root, text="Browse", command=browse_file).grid(row=0, column=2)
+    file_entry.grid(row=0, column=1, **padding)
+    tk.Button(root, text="Browse", command=browse_file).grid(row=0, column=2, **padding)
 
-    tk.Label(root, text="Scale Factor:").grid(row=1, column=0, sticky="e")
+    tk.Label(root, text="Scale Factor:").grid(row=1, column=0, sticky="e", **padding)
     scale_entry = tk.Entry(root)
     scale_entry.insert(0, "1.0")
-    scale_entry.grid(row=1, column=1)
+    scale_entry.grid(row=1, column=1, **padding)
 
-    tk.Label(root, text="X Offset:").grid(row=2, column=0, sticky="e")
+    tk.Label(root, text="X Offset:").grid(row=2, column=0, sticky="e", **padding)
     x_offset_entry = tk.Entry(root)
     x_offset_entry.insert(0, "0.0")
-    x_offset_entry.grid(row=2, column=1)
+    x_offset_entry.grid(row=2, column=1, **padding)
 
-    tk.Label(root, text="Y Offset:").grid(row=3, column=0, sticky="e")
+    tk.Label(root, text="Y Offset:").grid(row=3, column=0, sticky="e", **padding)
     y_offset_entry = tk.Entry(root)
     y_offset_entry.insert(0, "0.0")
-    y_offset_entry.grid(row=3, column=1)
+    y_offset_entry.grid(row=3, column=1, **padding)
 
-    tk.Label(root, text="Thickness Multiplier:").grid(row=4, column=0, sticky="e")
+    tk.Label(root, text="Thickness Multiplier:").grid(row=4, column=0, sticky="e", **padding)
     thickness_entry = tk.Entry(root)
     thickness_entry.insert(0, "1.0")
-    thickness_entry.grid(row=4, column=1)
+    thickness_entry.grid(row=4, column=1, **padding)
 
-    tk.Button(root, text="Convert", command=run_conversion).grid(row=5, column=1, pady=10)
+    # Buttons
+    btn_frame = tk.Frame(root)
+    btn_frame.grid(row=5, column=0, columnspan=3, pady=10)
+    tk.Button(btn_frame, text="Convert & Save", command=run_conversion_to_file).pack(side="left", padx=5)
+    tk.Button(btn_frame, text="Copy to Clipboard", command=run_conversion_to_clipboard).pack(side="left", padx=5)
+    tk.Button(btn_frame, text="View on GitHub", command=open_github).pack(side="left", padx=5)
+
+    # Status
+    status_label = tk.Label(root, text="", fg="green")
+    status_label.grid(row=6, column=0, columnspan=3, **padding)
 
     root.mainloop()
 
