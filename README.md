@@ -19,4 +19,4 @@ first of all you can read up everything on how SVGs work [here](https://develope
 secondly i will ask that you get a little experience in how to properly format a reticle in Warthunder. It is important you understand how they are formated and work.
 There are many guides on how to make your own so it should be pretty easy.
 
-
+## Incase you do not trust the exe, you may run this script using Python directly (download the .py file)
