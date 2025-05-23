@@ -50,13 +50,7 @@ def parse_svg_filled(svg_path, scale_factor=1.0, x_offset=0.0, y_offset=0.0, thi
         quad_pts = edge_to_quad(x1n, y1n, x2n, y2n, width_norm=actual_thickness)
         tl, tr, br, bl = quad_pts
         quads.append(
-            f"""    quad {{
-        tl:p2 = {tl[0]:.6f}, {tl[1]:.6f};
-        tr:p2 = {tr[0]:.6f}, {tr[1]:.6f};
-        br:p2 = {br[0]:.6f}, {br[1]:.6f};
-        bl:p2 = {bl[0]:.6f}, {bl[1]:.6f};
-    }}"""
-        )
+            f"""    quad {{tl:p2 = {tl[0]:.6f}, {tl[1]:.6f};tr:p2 = {tr[0]:.6f}, {tr[1]:.6f};br:p2 = {br[0]:.6f}, {br[1]:.6f};bl:p2 = {bl[0]:.6f}, {bl[1]:.6f};}}""")
 
     for tag in ['polygon', 'polyline']:
         for node in doc.getElementsByTagName(tag):
